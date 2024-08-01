@@ -1,5 +1,6 @@
+const {signIn,signUp,playList,updateDetails,userDetails} = require('./player-controller')
 const express = require('express');
- import { signIn,signUp,playList,updateDetails,updateDetails,userDetails } from './player-controller';
+ 
 
 const playerRouter=express.Router();
 
