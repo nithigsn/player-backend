@@ -1,46 +1,39 @@
 const PlayerModel = require('./player-model');
 const bcrypt = require('bcrypt');
 
-
-//Controller Logics Below
-
+// Controller Logics Below
 
 async function signUp(req, res) {
     try {
-        const payload = req.body;
+        const { name, email, username, password } = req.body;
 
-        const saltRounds = 10; // The number of salt rounds for bcrypt
-        
-        // Hash password
-        const hashedPassword = await bcrypt.hash(payload.password, saltRounds);
+        const saltRounds = 10; // Number of salt rounds for bcrypt
 
-        const obj = {
-            name: payload.name,
-            email: payload.email,
-            username: payload.username,
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        const newUser = await PlayerModel.create({
+            name,
+            email,
+            username,
             password: hashedPassword
-        };
+        });
 
-        const newUser = await PlayerModel.create(obj);
-
-        res.json({
+        res.status(201).json({
             status: true,
-            msg: "User Created Successfully",
+            msg: "User created successfully",
             data: {
-                id: newUser._id // Ensure 'newUser' is used here to access the created user's ID
+                id: newUser._id
             }
         });
     } catch (error) {
-        res.json({
+        res.status(500).json({
             status: false,
             msg: 'Error',
             data: error.message // Send only the error message
         });
     }
 }
-
-
-
 
 async function signIn(req, res) {
     try {
@@ -73,7 +66,7 @@ async function signIn(req, res) {
             data: {
                 id: user._id,
                 username: user.username,
-                // You can add more user details if needed
+                // Add more user details if needed
             }
         });
     } catch (error) {
@@ -85,84 +78,76 @@ async function signIn(req, res) {
     }
 }
 
-
-//CRUD: u -> Update
-
-
+// CRUD: Create/Update Playlist
 async function playList(req, res) {
     try {
         const { _id, playlistname } = req.body;
 
         // Add a new playlist to the specified player's playlists array
         const result = await PlayerModel.updateOne(
-            { _id: _id },
-            { $push: { playlists: { playlistname: playlistname, songs: [] } } }
+            { _id },
+            { $push: { playlists: { playlistname, songs: [] } } }
         );
 
-        const status = result.modifiedCount === 1;
-
         res.json({
-            status: status,
-            msg: status ? "success" : "fail"
+            status: result.modifiedCount === 1,
+            msg: result.modifiedCount === 1 ? "Success" : "Failed"
         });
     } catch (error) {
-        res.json({
+        res.status(500).json({
             status: false,
-            msg: 'error',
-            data: error
+            msg: 'Error',
+            data: error.message
         });
     }
 }
 
-
-//CRUD : R -> Read
-
+// CRUD: Read User Details
 async function userDetails(req, res) {
     try {
-        // Get the id from request parameters
-        const condition = { _id: req.params.id };
+        const { id } = req.params;
 
         // Find the player with the given id
-        const result = await PlayerModel.findOne(condition);
+        const result = await PlayerModel.findById(id);
 
-        // Check if the result is not null
-        const status = result !== null;
+        if (!result) {
+            return res.status(404).json({
+                status: false,
+                msg: "User not found"
+            });
+        }
 
-        // Respond with the appropriate status and data
         res.json({
-            status: status,
-            msg: status ? "true" : "false",
+            status: true,
+            msg: "User found",
             data: result
         });
     } catch (error) {
-        // Handle any errors that occurred during the process
-        res.json({
+        res.status(500).json({
             status: false,
-            msg: 'error',
-            data: error
+            msg: 'Error',
+            data: error.message
         });
     }
 }
 
-
+// CRUD: Update User Details
 async function updateDetails(req, res) {
     try {
         const { _id, about } = req.body;
 
         // Update the about field of the specified player's document
         const result = await PlayerModel.updateOne(
-            { _id: _id },
-            { $set: { about: about } }
+            { _id },
+            { $set: { about } }
         );
         
-        const status = result.modifiedCount === 1;
-
         res.json({
-            status: status,
-            msg: status ? "Success" : "Failed"
+            status: result.modifiedCount === 1,
+            msg: result.modifiedCount === 1 ? "Success" : "Failed"
         });
     } catch (error) {
-        res.json({
+        res.status(500).json({
             status: false,
             msg: "Error",
             data: error.message
@@ -170,7 +155,4 @@ async function updateDetails(req, res) {
     }
 }
 
-
-
-
-module.exports = { signUp, signIn, playList, userDetails ,updateDetails };
+module.exports = { signUp, signIn, playList, userDetails, updateDetails };

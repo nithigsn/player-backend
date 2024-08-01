@@ -1,40 +1,43 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-
-const playerRouter = require('./player-routes')
+const playerRouter = require('./player-routes');
 
 const app = express();
 
+// MongoDB URI
 const URI = 'mongodb+srv://nithishgsn000:0SCO5YqWOZ8rUL61@soniquewave.wgzuexb.mongodb.net/?retryWrites=true&w=majority&appName=SoniqueWave';
 
-mongoose.connect(URI);
-mongoose.connection.on('connected', () => {
-    console.log('Mongo DB is Connected');
-});
+// Connect to MongoDB
+mongoose.connect(URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB is connected'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
-
-// middle ware
-app.use(morgan("tiny"));
+// Middleware
+app.use(morgan('tiny'));
 app.use(cors());
 app.use(bodyParser.json());
 
-
-//router
+// Router
 app.use('/player', playerRouter);
 
+// Health check endpoint
+app.get('/all', (req, res) => {
+    res.json({ msg: 'working' });
+});
 
-//To Check End Point is Working
-app.use('/all', (req, res) => {
-    res.json({
-        msg: "working"
-    })
-})
+// Handle 404 errors
+app.use((req, res, next) => {
+    res.status(404).json({ error: 'Not Found' });
+});
 
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
+});
 
-
-
-//exports
+// Export the app
 module.exports = app;

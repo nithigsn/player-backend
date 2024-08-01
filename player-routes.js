@@ -6,7 +6,6 @@ const playerRouter=express.Router();
 
 //Crud
 
-
 // C -> Create - POST
 playerRouter.post('/signup',signUp);
 
@@ -18,19 +17,6 @@ playerRouter.post('/update',updateDetails)
 
 // R -> Read GET
 playerRouter.get('/:id',userDetails);
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
