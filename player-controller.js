@@ -45,15 +45,15 @@ async function signIn(req, res) {
                 msg: 'Username or password is incorrect'
             });
         }
-
-        // Compare the provided password with the stored hashed password
-        const isPasswordMatch = await compare(password, user.password);
-        if (!isPasswordMatch) {
+        
+        if (password !== user.password) {
             return res.status(400).json({
                 status: false,
                 msg: 'Username or password is incorrect'
             });
         }
+
+
 
         // If everything is correct
         res.json({
